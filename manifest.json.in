@@ -1,0 +1,16 @@
+{
+    "name": "x.unofficial",
+    "description": "Unofficial WebApp for X",
+    "architecture": "@CLICK_ARCH@",
+    "title": "X unofficial",
+    "hooks": {
+        "instaweb": {
+            "apparmor": "instaweb.apparmor",
+            "desktop":  "instaweb.desktop",
+            "content-hub": "instaweb-content-hub.json" 
+        }
+    },
+    "version": "0.1.0",
+    "maintainer": "Renzard politakis <renzardpolitakis@gmail.com>",
+    "framework" : "@CLICK_FRAMEWORK@"
+}

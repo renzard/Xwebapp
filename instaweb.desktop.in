@@ -1,0 +1,10 @@
+[Desktop Entry]
+_Name=X
+Exec=qmlscene %U qml/Main.qml  --scaling --multisample --gles --disable-gpu
+Icon=assets/logo.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
+
+X-Ubuntu-Splash-Color=#000000
+X-Ubuntu-Splash-Image=assets/splash.png

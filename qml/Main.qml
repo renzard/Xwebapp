@@ -70,39 +70,19 @@ MainView {
       id: pageMain
       anchors.fill: parent
 
-      // ---- Μοντέρνο, branded top bar πάνω από το webview ----
+      // Χωρίς top bar: το webview πιάνει όλη την οθόνη
+      // Το header=null ΔΕΝ το κρύβει στο Lomiri (μένει μια μαύρη μπάρα που
+      // σκεπάζει το πάνω μέρος του X). Το κρύβουμε ρητά με μηδενικό ύψος.
       header: PageHeader {
-        id: mainHeader
-        title: i18n.tr("X")
-
-        leadingActionBar.actions: [
-          Action {
-            iconName: "back"
-            text: i18n.tr("Πίσω")
-            enabled: webview.canGoBack
-            onTriggered: webview.goBack()
-          }
-        ]
-
-        trailingActionBar.actions: [
-          Action {
-            iconName: "reload"
-            text: i18n.tr("Ανανέωση")
-            onTriggered: webview.reload()
-          }
-        ]
-
-        StyleHints {
-          foregroundColor: "white"
-          backgroundColor: mainView.headerColor
-          dividerColor: mainView.headerColor
-        }
+        visible: false
+        height: 0
+        title: ""
       }
 
       WebEngineView {
         id: webview
         anchors {
-          top: mainHeader.bottom
+          top: parent.top
           left: parent.left
           right: parent.right
           bottom: parent.bottom
@@ -174,6 +154,10 @@ MainView {
             }
         }
 
+        onJavaScriptConsoleMessage: function(level, message, lineNumber, sourceID) {
+          if (message.indexOf("X-") === 0) console.log(message);
+        }
+
         onLoadingChanged: function(loadRequest) {
           if (loadRequest.status === WebEngineView.LoadFailedStatus) {
             webview.hasError = true;
@@ -185,7 +169,7 @@ MainView {
 
       // ---- Λεπτή μπάρα προόδου φόρτωσης, κάτω από το header ----
       Rectangle {
-        anchors { top: mainHeader.bottom; left: parent.left }
+        anchors { top: parent.top; left: parent.left }
         height: units.gu(0.3)
         width: parent.width * (webview.loadProgress / 100)
         color: mainView.accentColor
@@ -196,7 +180,7 @@ MainView {
       // ---- Δική μας οθόνη "χωρίς σύνδεση", αντί για το προεπιλεγμένο,
       // άσχημο error page του Chromium ----
       Rectangle {
-        anchors { top: mainHeader.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+        anchors { top: parent.top; left: parent.left; right: parent.right; bottom: parent.bottom }
         color: theme.palette.normal.background
         visible: webview.hasError
 
@@ -246,6 +230,30 @@ MainView {
               webview.reload();
             }
           }
+        }
+      }
+
+      // ---- Floating "+" κουμπί με ημικυκλικό μενού συντομεύσεων ----
+      FabMenu {
+        anchors {
+          fill: parent
+          topMargin: 0
+        }
+        z: 500
+        accentColor: mainView.accentColor
+        canGoBack: webview.canGoBack
+        // Εμφανίζεται πάντα, σε όλες τις σελίδες
+        readonly property bool wanted: true
+        opacity: wanted ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: 250 } }
+        onWantedChanged: if (!wanted) expanded = false
+
+        // Πλοήγηση ΜΕΣΑ στη σελίδα (SPA), χωρίς πλήρες reload
+        onNavigate: {
+          if (target === "back") { webview.goBack(); return; }
+          if (target === "reload") { webview.reload(); return; }
+          webview.runJavaScript("window.__xGo && window.__xGo(" + JSON.stringify(target) + ")");
         }
       }
 
